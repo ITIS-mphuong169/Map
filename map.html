@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thêm tọa độ vào bản đồ Leaflet</title>
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  
+  <style>
+    /* Định nghĩa chiều cao cho bản đồ */
+    #map {
+      height: 600px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    /* Form nhập tọa độ và bán kính */
+    .form-container {
+      margin-bottom: 10px;
+    }
+    input {
+      padding: 5px;
+      margin-right: 5px;
+      width: 150px;
+    }
+    button {
+      padding: 5px 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <h3>Thêm tọa độ và bán kính vòng tròn</h3>
+
+  <!-- Form nhập tọa độ -->
+  <div class="form-container">
+    <input type="number" step="any" id="latInput" placeholder="Nhập vĩ độ (latitude)">
+    <input type="number" step="any" id="lngInput" placeholder="Nhập kinh độ (longitude)">
+    <input type="text" id="nameInput" placeholder="Tên địa điểm">
+    <button onclick="addMarker()">Thêm điểm</button>
+  </div>
+
+  <!-- Form nhập bán kính vòng tròn -->
+  <div class="form-container">
+    <input type="number" id="radiusInput" placeholder="Nhập bán kính (mét)">
+    <button onclick="updateCircleRadius()">Cập nhật vòng tròn</button>
+  </div>
+
+  <!-- Khu vực hiển thị bản đồ -->
+  <div id="map"></div>
+
+  <!-- Link JS của Leaflet -->
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+  <script>
+    // Tọa độ trung tâm ban đầu
+    const centerLat = 21.0143;
+    const centerLng = 105.8084;
+    let RADIUS = 500; // Bán kính vòng tròn mặc định (mét)
+
+    // Danh sách tọa độ ban đầu
+    let locations = [
+      { lat: 21.0150, lng: 105.8089, title: "Nhà trọ số 1" },
+      { lat: 21.0138, lng: 105.8070, title: "Nhà trọ số 2" },
+      { lat: 21.0146, lng: 105.8092, title: "Nhà trọ số 3" }
+    ];
+
+    // Khởi tạo bản đồ
+    const map = L.map("map").setView([centerLat, centerLng], 15);
+
+    // Thêm lớp nền bản đồ từ OpenStreetMap
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Tạo biến vòng tròn (circle)
+    let circle = L.circle([centerLat, centerLng], {
+      color: "blue",
+      fillColor: "#3399ff",
+      fillOpacity: 0.2,
+      radius: RADIUS
+    }).addTo(map);
+
+    // Thêm marker ban đầu
+    locations.forEach((loc) => addMarkerToMap(loc.lat, loc.lng, loc.title));
+
+    // Hàm hiển thị marker trên bản đồ
+    function addMarkerToMap(lat, lng, title) {
+      const marker = L.marker([lat, lng]).addTo(map);
+      marker.bindPopup(`<b>${title}</b><br>(${lat}, ${lng})`).openPopup();
+    }
+
+    // Hàm thêm marker mới khi nhập tọa độ
+    function addMarker() {
+      const lat = parseFloat(document.getElementById("latInput").value);
+      const lng = parseFloat(document.getElementById("lngInput").value);
+      const name = document.getElementById("nameInput").value || "Địa điểm mới";
+
+      // Kiểm tra xem tọa độ có hợp lệ không
+      if (isNaN(lat) || isNaN(lng)) {
+        alert("Vui lòng nhập tọa độ hợp lệ!");
+        return;
+      }
+
+      // Thêm vào danh sách và hiển thị trên bản đồ
+      locations.push({ lat, lng, title: name });
+      addMarkerToMap(lat, lng, name);
+
+      // Xóa nội dung input sau khi thêm
+      document.getElementById("latInput").value = "";
+      document.getElementById("lngInput").value = "";
+      document.getElementById("nameInput").value = "";
+    }
+
+    // Hàm cập nhật bán kính vòng tròn
+    function updateCircleRadius() {
+      const newRadius = parseInt(document.getElementById("radiusInput").value);
+
+      // Kiểm tra giá trị hợp lệ
+      if (isNaN(newRadius) || newRadius <= 0) {
+        alert("Vui lòng nhập bán kính hợp lệ (lớn hơn 0)!");
+        return;
+      }
+
+      // Cập nhật bán kính
+      RADIUS = newRadius;
+
+      // Xóa vòng tròn cũ
+      map.removeLayer(circle);
+
+      // Vẽ vòng tròn mới với bán kính cập nhật
+      circle = L.circle([centerLat, centerLng], {
+        color: "blue",
+        fillColor: "#3399ff",
+        fillOpacity: 0.2,
+        radius: RADIUS
+      }).addTo(map);
+    }
+  </script>
+
+</body>
+</html>
